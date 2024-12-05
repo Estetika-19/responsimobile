@@ -15,20 +15,23 @@ class _AmiiboListScreenState extends State<AmiiboListScreen>
   bool _isLoading = false;
   List<Amiibo> _amiiboList = [];
   String? _errorMessage;
-  String _currentEndpoint = 'api/amiibo/';
+  final String _currentEndpoint =
+      'https://www.amiiboapi.com/api/amiibo'; // Use full URL
 
   @override
   void initState() {
     super.initState();
     _presenter = AmiiboPresenter(this);
-    _presenter.loadAmiiboData(_currentEndpoint);
+    _fetchData(_currentEndpoint);
   }
 
   void _fetchData(String endpoint) {
     setState(() {
-      _currentEndpoint = endpoint;
-      _presenter.loadAmiiboData(endpoint);
+      _isLoading = true;
+      _errorMessage = null; // Reset error message
+      _amiiboList.clear(); // Clear previous list
     });
+    _presenter.loadAmiiboData(endpoint);
   }
 
   @override
@@ -53,42 +56,52 @@ class _AmiiboListScreenState extends State<AmiiboListScreen>
   }
 
   @override
+  void showError(String message) {
+    setState(() {
+      _errorMessage = message;
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Amiibo List"),
+        title: const Text("Amiibo List"),
       ),
       body: Column(
         children: [
           Expanded(
             child: _isLoading
-                ? Center(child: CircularProgressIndicator())
+                ? const Center(child: CircularProgressIndicator())
                 : _errorMessage != null
-                    ? Center(child: Text("Error : ${_errorMessage}"))
-                    : ListView.builder(
-                        itemCount: _amiiboList.length,
-                        itemBuilder: (context, index) {
-                          final amiibo = _amiiboList[index];
-                          return ListTile(
-                            leading: amiibo.image.isNotEmpty
-                                ? Image.network(amiibo.image)
-                                : Image.network('https://placehold.co/600x400'),
-                            title: Text(amiibo.name),
-                            subtitle: Text('Game Series ${amiibo.gameSeries}'),
-                            onTap: () {},
-                          );
-                        },
-                      ),
-          )
+                    ? Center(child: Text("Error: $_errorMessage"))
+                    : _amiiboList.isEmpty
+                        ? const Center(child: Text("No Amiibo data found."))
+                        : ListView.builder(
+                            itemCount: _amiiboList.length,
+                            itemBuilder: (context, index) {
+                              final amiibo = _amiiboList[index];
+                              return ListTile(
+                                leading: amiibo.image.isNotEmpty
+                                    ? Image.network(
+                                        amiibo.image,
+                                        width: 50,
+                                        height: 50,
+                                        fit: BoxFit.cover,
+                                      )
+                                    : const Icon(Icons.image_not_supported),
+                                title: Text(amiibo.name),
+                                subtitle:
+                                    Text('Game Series: ${amiibo.gameSeries}'),
+                                onTap: () {
+                                  // Handle tap
+                                },
+                              );
+                            },
+                          ),
+          ),
         ],
       ),
     );
-  }
-
-  @override
-  void ShowError(String message) {
-    setState(() {
-      _errorMessage = message;
-    });
   }
 }

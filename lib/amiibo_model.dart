@@ -6,7 +6,7 @@ class Amiibo {
   final String tail;
   final String image;
   final String name;
-  final String release;
+  final Map<String, String> release; // Nested release dates
 
   Amiibo({
     required this.amiiboSeries,
@@ -18,18 +18,19 @@ class Amiibo {
     required this.name,
     required this.release,
   });
+
   factory Amiibo.fromJson(Map<String, dynamic> json) {
     return Amiibo(
-      amiiboSeries: json['amiiboSeries'] ?? 0,
-      character: json['Character'] ?? "",
+      amiiboSeries: json['amiiboSeries'] ?? "",
+      character: json['character'] ?? "",
       gameSeries: json['gameSeries'] ?? "",
-      image: (json['image'] != null && json['image'].isNotEmpty)
-          ? json['image'][0]
-          : 'https://placehold.co/600x400',
-      name: json['name'] ?? "",
       head: json['head'] ?? "",
       tail: json['tail'] ?? "",
-      release: json['release'] ?? "",
+      image: json['image'] ?? 'https://placehold.co/600x400',
+      name: json['name'] ?? "",
+      release: json['release'] != null
+          ? Map<String, String>.from(json['release'])
+          : {},
     );
   }
 }
